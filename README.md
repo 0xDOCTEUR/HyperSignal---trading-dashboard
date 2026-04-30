@@ -1,3 +1,37 @@
+# HyperSignal — trading dashboard
+
+Application web (**Hyperliquid**) : scan d’opportunités, plan multi‑TF, niveaux SL/TP.
+
+**Site public (GitHub Pages)** — après activation ci‑dessous et premier déploiement réussi :
+
+**https://0xDOCTEUR.github.io/HyperSignal---trading-dashboard/**
+
+---
+
+## Développement local
+
+```bash
+npm install
+npm run dev
+```
+
+---
+
+## GitHub Pages (lien public)
+
+1. Sur le dépôt GitHub : **Settings** → **Pages** → **Build and deployment**.
+2. **Source** : choisir **GitHub Actions** (pas « Deploy from a branch »).
+3. Pousser sur `main` : l’action **Deploy GitHub Pages** construit et publie automatiquement.
+4. Attendre 1–2 minutes puis ouvrir :  
+   **https://0xDOCTEUR.github.io/HyperSignal---trading-dashboard/**
+
+Si tu renommes le dépôt, mets à jour `GH_PAGES_BASE` dans `vite.config.ts` pour qu’il corresponde au nouveau nom (`/<nom-du-repo>/`).
+
+---
+
+<details>
+<summary>Ancienne doc du template Vite (optionnel)</summary>
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
@@ -71,3 +105,5 @@ export default defineConfig([
   },
 ])
 ```
+
+</details>
