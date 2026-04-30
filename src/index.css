@@ -1,0 +1,77 @@
+:root {
+  color-scheme: dark;
+  /** Aligné sur HyperPulse — https://0xdocteur.github.io/hyperpulse-dashboard/ */
+  --bg: #08090d;
+  --surface: #0f1218;
+  --surface2: #14181f;
+  --border: #1d232e;
+  --text: #e6edf3;
+  --muted: #7d8590;
+  --muted-2: #525b66;
+  --accent: #6ee7ff;
+  --accent-soft: rgba(110, 231, 255, 0.12);
+  --accent-border: rgba(110, 231, 255, 0.3);
+  /** Dérivés utilisés par App.css */
+  --accent-muted: #88f0ff;
+  --accent-dim: var(--accent-soft);
+  /** Accent « Hyperliquid » dans HyperPulse (#97FCE4) pour positions haussières */
+  --positive: #97fce4;
+  --negative: #f85149;
+  --neon-long: var(--positive);
+  --neon-short: #fb7185;
+  --neon-dim: rgba(110, 231, 255, 0.08);
+  --signal-faint: var(--muted-2);
+  --tf-bear-border: rgba(248, 81, 73, 0.38);
+  --tf-bear-glow: transparent;
+
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  letter-spacing: -0.01em;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(ellipse 800px 600px at 10% -10%, rgba(110, 231, 255, 0.06), transparent 60%),
+    radial-gradient(ellipse 600px 400px at 90% 0%, rgba(151, 252, 228, 0.04), transparent 60%),
+    var(--bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+/** Wordmark type HyperPulse (titre principal) */
+.brand-wordmark {
+  margin: 0;
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1.42rem;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+  background: linear-gradient(120deg, #6ee7ff 0%, #97fce4 50%, #fbbf24 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+code {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.88em;
+}
