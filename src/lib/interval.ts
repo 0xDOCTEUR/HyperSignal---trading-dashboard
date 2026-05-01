@@ -22,7 +22,37 @@ export type HlInterval = (typeof HL_INTERVALS)[number]
  * Intervalles proposés dans l’UI pour Plan + Opportunités uniquement (réduit la confusion).
  * Les autres UT HL restent utilisables en interne si besoin.
  */
-export const PLAN_SCAN_INTERVALS = ['15m', '1h', '4h'] as const satisfies readonly HlInterval[]
+export const PLAN_SCAN_INTERVALS = ['5m', '15m', '1h', '4h'] as const satisfies readonly HlInterval[]
+
+/** UT proposées pour le Plan : niveaux entrée / SL / TP (alignées sur la pyramide multi‑TF). */
+export const PLAN_LEVELS_INTERVALS = [
+  '1m',
+  '5m',
+  '15m',
+  '1h',
+  '4h',
+  '1d',
+  '1w',
+] as const satisfies readonly HlInterval[]
+
+/**
+ * Horizons pour confluence, pastilles Plan et comptage d’alignement Opportunités.
+ * Sans 1m : trop de bruit microstructure qui contredit souvent les UT de décision.
+ */
+export const MTF_SYNTHESIS_TF_ORDER = [
+  '5m',
+  '15m',
+  '1h',
+  '4h',
+  '1d',
+  '1w',
+] as const satisfies readonly HlInterval[]
+
+export type PlanLevelsInterval = (typeof PLAN_LEVELS_INTERVALS)[number]
+
+export function isPlanLevelsInterval(iv: string): iv is PlanLevelsInterval {
+  return (PLAN_LEVELS_INTERVALS as readonly string[]).includes(iv)
+}
 
 export function intervalToMs(interval: string): number {
   const map: Record<string, number> = {

@@ -34,11 +34,12 @@ export const SCAN_TOP_PAIRS_BY_VOLUME = 64
 export const SCAN_MAX_MTFCHECK = 28
 
 /** Arrêt anticipé multi‑TF une fois ce nombre d’opportunités validées. */
-export const SCAN_LISTED_SOFT_CAP = 18
+export const SCAN_LISTED_SOFT_CAP = 5
 
 async function filterTradableSignals(
   candidates: ScanCandidate[],
   params: TradabilityScannerParams,
+  locale: Locale,
   opts?: {
     onChunkDone?: (done: number, total: number) => void
     listedSoftCap?: number
@@ -56,9 +57,10 @@ async function filterTradableSignals(
 
   for (let i = 0; i < candidates.length; i += TRADABILITY_CONCURRENCY) {
     const slice = candidates.slice(i, i + TRADABILITY_CONCURRENCY)
-    const flags = await Promise.all(slice.map((c) => assessTradabilityAsync(c, params)))
+    const results = await Promise.all(slice.map((c) => assessTradabilityAsync(c, params, locale)))
     for (let j = 0; j < slice.length; j++) {
-      if (flags[j]) out.push(slice[j].signal)
+      const sig = results[j]
+      if (sig) out.push(sig)
     }
     mtfProcessed += slice.length
     opts?.onChunkDone?.(mtfProcessed, total)
@@ -150,25 +152,6 @@ export function useMarketScanner(
     const startTime = end - ms * MAX_BARS
     const barsWindow = Math.max(2, Math.ceil(86_400_000 / ms))
 
-    let btcRetWindow: number | null = null
-    try {
-      const btcSnap = await fetchCandleSnapshot({
-        coin: 'BTC',
-        interval: scanInterval,
-        startTime,
-        endTime: end,
-      })
-      const { closes: bc } = candlesToOHLC(btcSnap)
-      const cn = bc.length
-      if (cn >= barsWindow + 1) {
-        const from = bc[cn - 1 - barsWindow]
-        const to = bc[cn - 1]
-        if (from != null && from !== 0) btcRetWindow = (to - from) / from
-      }
-    } catch {
-      btcRetWindow = null
-    }
-
     const collected: ScanCandidate[] = []
 
     try {
@@ -190,7 +173,7 @@ export function useMarketScanner(
                 highs,
                 lows,
                 vols,
-                btcRetWindow,
+                null,
                 barsWindow
               )
               if (!signal || signal.confluencePct < MIN_SCAN_CONFLUENCE_PCT) return null
@@ -221,7 +204,7 @@ export function useMarketScanner(
 
       if (forTradability.length > 0) {
         setScanProgress({ phase: 'tradability', done: 0, total: forTradability.length })
-        const r = await filterTradableSignals(forTradability, tradabilityParams, {
+        const r = await filterTradableSignals(forTradability, tradabilityParams, locale, {
           listedSoftCap: SCAN_LISTED_SOFT_CAP,
           onChunkDone: (done, total) => {
             setScanProgress({ phase: 'tradability', done, total })

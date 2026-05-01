@@ -1,7 +1,9 @@
 import { atr, ema, lastNonNull } from './indicators'
 import { detectRegime } from './strategies'
 import type { PlanTfRow } from '../hooks/usePlanMultiTf'
-import { countIntervalsAlignedWithTradeDirection, fetchPlanTfRowsForCoin } from '../hooks/usePlanMultiTf'
+import { fetchPlanTfRowsForCoin } from '../hooks/usePlanMultiTf'
+import type { Locale } from '../i18n/locale'
+import { buildPlanMtfActionBrief, countIntervalsAlignedWithTradeDirection } from './mtfSynthesis'
 import { buildTradePlan, type TradePlan } from './tradePlan'
 import type { ScanSignal } from './scanMarket'
 
@@ -14,7 +16,7 @@ export const SCAN_MIN_RR_AT_TP1 = 1.25
 /** Distance min. au mur daily (%) — Opportunités / Plan (zone journalière). */
 export const MIN_DAILY_ROOM_PCT = 0.22
 
-/** Alignement minimal sur les 4 UT pyramidales pour lister une opportunité. */
+/** Alignement minimal sur les UT pyramidales du Plan pour lister une opportunité. */
 export const SCAN_MIN_MTF_ALIGNED = 2
 
 export interface TradabilityScannerParams {
@@ -131,8 +133,19 @@ export function assessTradabilityWithRows(
  */
 export async function assessTradabilityAsync(
   candidate: ScanCandidate,
-  params: TradabilityScannerParams
-): Promise<boolean> {
-  const rows = await fetchPlanTfRowsForCoin(candidate.signal.coin, { preset: 'scan' })
-  return assessTradabilityWithRows(candidate, params, rows)
+  params: TradabilityScannerParams,
+  locale: Locale
+): Promise<ScanSignal | null> {
+  const rows = await fetchPlanTfRowsForCoin(candidate.signal.coin, { preset: 'scan', locale })
+  if (!assessTradabilityWithRows(candidate, params, rows)) return null
+  const brief = buildPlanMtfActionBrief(rows, locale)
+  const mtfAlignedCount = countIntervalsAlignedWithTradeDirection(
+    rows,
+    candidate.signal.direction
+  )
+  return {
+    ...candidate.signal,
+    preferredTimeframe: brief.bestInterval,
+    mtfAlignedCount,
+  }
 }

@@ -31,7 +31,7 @@ describe('passesTradabilityMtfDailyChecks', () => {
   it('rejette si alignement MTF insuffisant', () => {
     const rowsAlignedLong = mockPlanTfRowsPassingTradability('long', 100)
     const rowsWeakAlign = rowsAlignedLong.map((r, idx) =>
-      idx < 3
+      idx < 6
         ? {
             ...r,
             bestVote: r.bestVote ? { ...r.bestVote, direction: 'short' as const } : null,
@@ -57,6 +57,8 @@ describe('passesTradabilityMtfDailyChecks', () => {
       relativeVsBtc: null,
       indicatorGauges: null,
       scanTrend: null,
+      preferredTimeframe: null,
+      mtfAlignedCount: 2,
     }
     const candidate: ScanCandidate = {
       signal: stubSignal as ScanSignal,

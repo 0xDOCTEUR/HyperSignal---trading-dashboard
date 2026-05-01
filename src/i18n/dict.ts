@@ -33,41 +33,62 @@ const fr = {
   'scan.thSide': 'Sens',
   'scan.thPrice': 'Prix',
   'scan.thScore': 'Score',
-  'scan.thBtc': 'vs BTC',
+  'scan.thUt': 'UT',
   'scan.thPlanSr': 'Plan',
 
   'scan.priceColTitle': 'Dernier close au scan ({{interval}})',
+  'scan.utColTitle': 'UT suggérée (synthèse multi‑TF ; le scan reste sur {{interval}})',
   'scan.scoreColTitle': 'Synthèse qualitative scanner (0–100)',
   'scan.scoreCellTitle':
-    'Synthèse qualitative (confluence, biais, confirmation, vs BTC…), pas une probabilité de gain.',
+    'Synthèse qualitative (confluence, alignement multi‑UT, biais, confirmation…), pas une probabilité de gain.',
 
   'scan.planBtn': 'Plan',
   'scan.openPlanTitle': 'Ouvrir {{coin}} dans le Plan',
 
   'scan.emptyBody':
-    'Aucune opportunité ne passe tous les filtres pour le moment (RR TP1, alignement multi‑UT, marge daily…).',
+    'Aucune opportunité ne figure dans le top {{softCap}} pour le moment (RR TP1, alignement multi‑UT, marge daily…).',
   'scan.emptyHint':
-    'Aucune ligne : confluence ≥ {{conf}} %, RR TP1 ≥ {{rr}}×, pyramide ≥ {{mtf}} UT.',
+    'Aucune ligne : confluence ≥ {{conf}} %, RR TP1 ≥ {{rr}}×, pyramide ≥ {{mtf}} UT ; top {{softCap}} affiché.',
 
-  'scan.srIntro':
-    'Opportunités : bougies {{interval}} sur au plus {{topPairs}} paires par volume HL ; multi‑TF léger sur au plus {{mtfCheck}} meilleurs candidats après confluence ; arrêt du multi‑TF dès {{softCap}} opportunités passant tous les filtres. Intervalles : 15 minutes, 1 heure, 4 heures, journalier. Niveaux SL et TP sur flux {{planIv}}. Filtres : confluence au moins {{minConf}} pour cent, RR premier objectif au moins {{minRr}} fois, au moins {{minMtf}} horizons alignés avec le sens du trade. Taille indicative {{equity}} dollars. Scan automatique désactivé par défaut, pas {{autoMin}} minutes si activé.',
-
-  'btc.outperform': 'Bat BTC',
-  'btc.inline': '≈ BTC',
-  'btc.underperform': 'Sous BTC',
+  'scan.filtersIntro':
+    'Bougies {{interval}} sur le top {{topPairs}} paires (volume 24 h). Après tri confluence : jusqu’à {{mtfCheck}} candidats passés en contrôle multi‑UT. Pour entrer dans la liste : confluence ≥ {{minConf}} %, RR au TP1 ≥ {{minRr}}×, ≥ {{minMtf}} UT alignées avec le sens, marge daily ≥ {{dailyRoom}} % du cours. Affichage d’au plus {{softCap}} lignes (tri par score). Taille indicative des calculs : {{equity}} $. Auto‑scan toutes les {{autoMin}} min si activé. Synthèse multi‑UT du plan : 5m → hebdo (sans 1m).',
 
   'errors.clipboard':
     'Erreur copie — autorise le presse-papiers dans le navigateur',
 
   'plan.title': 'Plan',
-  'plan.filterLabel': 'Filtrer',
-  'plan.filterPlaceholder': 'Symbole ou nom…',
-  'plan.filterAria': 'Filtrer les paires par symbole ou nom',
+  'plan.downloadCard': 'Télécharger la carte',
+  'plan.downloadCardBusy': 'Export…',
+  'plan.downloadCardAria':
+    'Télécharger une image PNG du plan : Fear & Greed, paire, confluence multi‑UT, prix live, carnet LIMIT.',
+  'plan.downloadCardErr': 'Impossible de générer l’image — réessaie.',
+  'plan.fearGreedTitle': 'Fear & Greed (crypto)',
+  'plan.fearGreedAria': 'Indice Fear and Greed du marché crypto (Alternative.me)',
+  'plan.fearGreedLoading': 'Chargement de l’indice…',
+  'plan.fearGreedUnavailable': 'Indice temporairement indisponible',
+  'plan.fearGreedSource':
+    'Donnée indicative Alternative.me — pas un signal de trading ; décisions sous votre responsabilité.',
+  'plan.marketTitle': 'Market',
+  'plan.marketHover':
+    'Niveaux indicatifs près du dernier creux (achat) et du dernier sommet (vente) sur l’UT, hors ordres du plan.',
+  'plan.limitTitle': 'Limit',
+  'plan.limitHover': 'Entrée, TP1, stop SL et ratio RR du plan — à copier sur le carnet d’ordres.',
   'plan.pairLabel': 'Paire (perps HL)',
   'plan.pairAria': 'Choisir une paire Hyperliquid',
-  'plan.noPairMatch': 'Aucune paire ne correspond au filtre.',
 
-  'plan.liveStripTitle': 'Dernier cours (flux Plan)',
+  'plan.levelsIvLabel': 'UT entrée / SL / TP',
+  'plan.levelsIvAria':
+    'Unité de temps des bougies pour calculer l’entrée de référence, le stop et les take profit',
+  'plan.levelsIvTitle':
+    'Les niveaux sont calculés à partir des swings et de l’ATR sur cette UT (même flux que la stratégie affichée).',
+
+  'plan.syncLevelsSuggestedLabel':
+    'Aligner l’UT entrée / SL / TP sur l’UT suggérée (synthèse MTF)',
+  'plan.syncLevelsSuggestedAria':
+    'Si activé, cette UT suit la recommandation multi‑TF ; la préférence est enregistrée localement. Sinon, utilisez le bouton pour appliquer une fois sans automatiser.',
+  'plan.applySuggestedIvBtn': 'Appliquer {{label}}',
+
+  'plan.liveStripTitle': 'Dernier cours ({{interval}} · flux Plan)',
   'plan.liveSrPrefix': 'Prix actif',
   'plan.liveSrUnavailable': ' indisponible',
 
@@ -77,27 +98,72 @@ const fr = {
   'plan.tpHint': 'Take profit · {{coin}}',
   'plan.slHint': 'SL · {{coin}}',
 
-  'plan.rrLabel': 'RR TP1',
+  'plan.execBuyLabel': 'Achat (limite)',
+  'plan.execSellLabel': 'Vente (limite)',
+  'plan.execBuyHint':
+    'Prix limite d’achat suggéré : bas de range récent sur {{interval}} (indicatif, pas un conseil).',
+  'plan.execSellHint':
+    'Prix limite de vente suggéré : haut de range récent sur {{interval}}.',
+
+  'plan.rrLabel': 'Multiplicateur TP',
   'plan.rrAria':
-    'Objectif risque rendement TP1 (entre {{min}} et {{max}})',
+    'Objectif risque / récompense TP1 (nombre entier entre {{min}} et {{max}}) — multiplicateur sur la distance entrée → SL',
   'plan.rrTitle':
-    'TP1 placé à environ {{rr}}× la distance entrée → SL (référence close plan).',
+    'TP1 à environ {{rr}}× la distance entrée → SL (réf. close plan). Ajuste le multiplicateur de prise de bénéfice cible.',
   'plan.rrPillShifted':
     'RR réel aux niveaux copiés : {{actual}}× (entrée limite ≠ close réf.) · objectif {{target}}×',
   'plan.rrPillFlat': 'RR aux niveaux affichés : {{actual}}×',
+  'plan.rrObjectiveShort': 'Objectif',
+  'plan.rrEffectiveShort': 'Effectif',
+  'plan.rrDecAria': 'Diminuer le multiplicateur TP d’une unité',
+  'plan.rrIncAria': 'Augmenter le multiplicateur TP d’une unité',
+  'plan.slMultLabel': 'Multiplicateur SL',
+  'plan.slMultTitle':
+    'Multiplie la distance entrée affichée → stop modèle (swing / ATR). 1,00× = stop calculé. Le TP1 suit le multiplicateur TP ci-dessus.',
+  'plan.slMultAria':
+    'Multiplicateur sur la distance stop modèle (nombre entier entre {{min}} et {{max}})',
+  'plan.slMultDecAria': 'Diminuer le multiplicateur SL d’une unité',
+  'plan.slMultIncAria': 'Augmenter le multiplicateur SL d’une unité',
+  'plan.slPillTitle':
+    'Risque vs stop modèle : {{actual}}× (objectif {{target}}×)',
 
   'plan.copyAll': 'Copier tout',
   'plan.copiedToast': 'Copié',
 
   'plan.biasMarketAria': 'Biais marché {{pair}}',
   'plan.biasSr': 'Biais · {{pair}}',
-  'plan.trendReadoutEyebrow': 'Lecture multi‑UT',
+  'plan.trendReadoutEyebrow': 'Confluence MTF',
+  'plan.actionBriefEyebrow': 'Synthèse',
+  'plan.mtfDetailsToggle': 'Détails : qualité d’entrée, niveaux, ordres',
+  'plan.mtfEssentialsEyebrow': 'Cadence UT',
+  'plan.mtfRsiLabel': 'RSI {{n}}',
+  'plan.rsiHeatOverbought': 'Surachat',
+  'plan.rsiHeatOversold': 'Survente',
+  'plan.rsiHeatNeutral': 'RSI neutre',
+  'plan.mtfBiasLong': 'Biais haussier',
+  'plan.mtfBiasShort': 'Biais baissier',
+  'plan.mtfBiasClash': 'Signaux croisés',
+  'plan.mtfBiasNeutral': 'Sans biais net',
+  'plan.mtfLimitTrendTitle': 'Tendance du plan LIMIT',
+  'plan.mtfLimitLong': 'LONG',
+  'plan.mtfLimitShort': 'SHORT',
 
+  'plan.longTermTitle': 'Investissement LT pur (mensuel)',
+  'plan.longTermBuy': 'Zone achat (mensuel)',
+  'plan.longTermSell': 'Zone vente (mensuel)',
+  'plan.longTermLimitedHover': 'Historique mensuel court (moins de 20 mois).',
+  'plan.longTermLimitedAria': 'Mode historique limité',
+  'plan.longTermPerfLabel': 'Lisibilité structurelle mensuelle (indicatif)',
+  'plan.longTermPerfAria': 'Score composite LT mensuel : {{score}} sur 100',
+  'plan.longTermLoading': 'Chargement du journalier pour synthèse mensuelle…',
+  'plan.longTermUnavailable':
+    'Aucune bougie journalière exploitable pour reconstruire au moins un mois (flux HL vide ou paire indisponible).',
+  'plan.longTermFeedError': 'Impossible de charger les bougies (erreur réseau ou API).',
   'plan.empty.candlesUnavailable': 'Bougies indisponibles',
   'plan.empty.loading': 'Chargement des bougies…',
   'plan.empty.shortHistoryTitle': 'Historique trop court',
   'plan.empty.historyShort':
-    'Seulement {{have}}/60 bougies sur {{interval}} (flux Plan fixe).',
+    'Seulement {{have}}/60 bougies sur {{interval}} (flux Plan).',
   'plan.empty.regimeUnavailable': 'Régime non calculable',
   'plan.empty.regimeUnavailableBody':
     'Les indicateurs de régime ne sont pas exploitables sur cette fenêtre (EMA/ATR en fin de série). Attendez la fin du chargement ou changez de paire.',
@@ -129,7 +195,9 @@ const fr = {
   'bloc.pairDirection': '{{pair}} · {{dir}}',
   'bloc.lastPrice': 'Dernier cours ({{interval}}): {{price}}',
   'bloc.planCloseRef': 'Close réf. plan: {{price}}',
-  'bloc.rrTp1': 'RR TP1 (~entrée affichée): {{rr}}×',
+  'bloc.rrTp1': 'Multiplicateur TP (~entrée affichée): {{rr}}×',
+  'bloc.execBuy': 'Limite achat (UT): {{price}}$',
+  'bloc.execSell': 'Limite vente (UT): {{price}}$',
 
   'tips.eth': 'ETH / EVM',
   'tips.sol': 'Solana',
@@ -159,41 +227,62 @@ const en: Record<keyof typeof fr, string> = {
   'scan.thSide': 'Side',
   'scan.thPrice': 'Price',
   'scan.thScore': 'Score',
-  'scan.thBtc': 'vs BTC',
+  'scan.thUt': 'TF',
   'scan.thPlanSr': 'Plan',
 
   'scan.priceColTitle': 'Last scan close ({{interval}})',
+  'scan.utColTitle': 'Suggested TF (multi‑TF synthesis; scan feed stays {{interval}})',
   'scan.scoreColTitle': 'Scanner qualitative summary (0–100)',
   'scan.scoreCellTitle':
-    'Qualitative blend (confluence, bias, confirmation, vs BTC…), not a win probability.',
+    'Qualitative blend (confluence, multi‑TF alignment, bias, confirmation…), not a win probability.',
 
   'scan.planBtn': 'Plan',
   'scan.openPlanTitle': 'Open {{coin}} in Plan',
 
   'scan.emptyBody':
-    'No opportunity passes all filters right now (TP1 RR, multi-TF alignment, daily room…).',
+    'No opportunity ranks in the top {{softCap}} right now (TP1 RR, multi‑TF alignment, daily room…).',
   'scan.emptyHint':
-    'No rows: confluence ≥ {{conf}} %, TP1 RR ≥ {{rr}}×, pyramid ≥ {{mtf}} TFs.',
+    'No rows: confluence ≥ {{conf}} %, TP1 RR ≥ {{rr}}×, pyramid ≥ {{mtf}} TFs; top {{softCap}} shown.',
 
-  'scan.srIntro':
-    'Opportunities: {{interval}} candles on up to {{topPairs}} HL volume pairs; light multi-TF on up to {{mtfCheck}} best candidates after confluence; multi-TF stops once {{softCap}} opportunities pass all filters. Intervals: 15m, 1h, 4h, daily. SL/TP levels use the {{planIv}} feed. Filters: at least {{minConf}}% confluence, first TP RR at least {{minRr}}×, at least {{minMtf}} timeframes aligned with trade direction. Indicative size {{equity}} USD. Auto scan off by default; every {{autoMin}} minutes when enabled.',
-
-  'btc.outperform': 'Beat BTC',
-  'btc.inline': '≈ BTC',
-  'btc.underperform': 'Lag BTC',
+  'scan.filtersIntro':
+    '{{interval}} candles on the top {{topPairs}} pairs by 24h volume. After confluence sort: up to {{mtfCheck}} candidates get multi‑TF checks. To list a row: confluence ≥ {{minConf}}%, TP1 RR ≥ {{minRr}}×, ≥ {{minMtf}} TFs aligned with direction, daily margin ≥ {{dailyRoom}}% vs the daily zone. At most {{softCap}} rows (conviction sort). Indicative sizing uses {{equity}} USD. Auto scan every {{autoMin}} min when enabled. Plan MTF synthesis: 5m through weekly (1m excluded).',
 
   'errors.clipboard':
     'Copy failed — allow clipboard access in your browser',
 
   'plan.title': 'Plan',
-  'plan.filterLabel': 'Filter',
-  'plan.filterPlaceholder': 'Symbol or name…',
-  'plan.filterAria': 'Filter pairs by symbol or name',
+  'plan.downloadCard': 'Download card',
+  'plan.downloadCardBusy': 'Exporting…',
+  'plan.downloadCardAria':
+    'Download a PNG of the plan card: Fear & Greed, pair, multi‑TF confluence, live price, LIMIT block.',
+  'plan.downloadCardErr': 'Could not generate the image — try again.',
+  'plan.fearGreedTitle': 'Fear & Greed (crypto)',
+  'plan.fearGreedAria': 'Crypto Fear and Greed Index (Alternative.me)',
+  'plan.fearGreedLoading': 'Loading index…',
+  'plan.fearGreedUnavailable': 'Index temporarily unavailable',
+  'plan.fearGreedSource':
+    'Indicative data from Alternative.me — not a trade signal; you remain responsible for decisions.',
+  'plan.marketTitle': 'Market',
+  'plan.marketHover':
+    'Indicative levels near latest swing low (buy) and swing high (sell) on the timeframe — not plan orders.',
+  'plan.limitTitle': 'Limit',
+  'plan.limitHover': 'Plan entry, TP1, stop SL and RR — copy to your order ticket.',
   'plan.pairLabel': 'Pair (HL perps)',
   'plan.pairAria': 'Choose a Hyperliquid pair',
-  'plan.noPairMatch': 'No pair matches the filter.',
 
-  'plan.liveStripTitle': 'Last price (Plan feed)',
+  'plan.levelsIvLabel': 'Timeframe · entry / SL / TP',
+  'plan.levelsIvAria':
+    'Candle timeframe used to compute reference entry, stop loss and take-profit levels',
+  'plan.levelsIvTitle':
+    'Levels come from swings and ATR on this timeframe (same feed as the displayed strategy).',
+
+  'plan.syncLevelsSuggestedLabel':
+    'Match entry / SL / TP timeframe to suggested TF (MTF synthesis)',
+  'plan.syncLevelsSuggestedAria':
+    'When on, this timeframe follows the multi‑TF suggestion; preference is stored locally. When off, use the button to apply once without automation.',
+  'plan.applySuggestedIvBtn': 'Apply {{label}}',
+
+  'plan.liveStripTitle': 'Last price ({{interval}} · Plan feed)',
   'plan.liveSrPrefix': 'Live price',
   'plan.liveSrUnavailable': ' unavailable',
 
@@ -202,26 +291,69 @@ const en: Record<keyof typeof fr, string> = {
   'plan.tpHint': 'Take profit · {{coin}}',
   'plan.slHint': 'SL · {{coin}}',
 
-  'plan.rrLabel': 'RR TP1',
-  'plan.rrAria': 'Risk/reward target for TP1 (between {{min}} and {{max}})',
+  'plan.execBuyLabel': 'Buy (limit)',
+  'plan.execSellLabel': 'Sell (limit)',
+  'plan.execBuyHint':
+    'Suggested limit buy: recent range low on {{interval}} (indicative, not advice).',
+  'plan.execSellHint': 'Suggested limit sell: recent range high on {{interval}}.',
+
+  'plan.rrLabel': 'TP multiplier',
+  'plan.rrAria':
+    'TP1 risk/reward target (whole number between {{min}} and {{max}}) — multiplier on entry→SL distance',
   'plan.rrTitle':
-    'TP1 placed at ~{{rr}}× the entry→SL distance (plan close reference).',
+    'TP1 at ~{{rr}}× the entry→SL distance (plan close ref). Adjusts the take-profit distance multiplier.',
   'plan.rrPillShifted':
     'Effective RR at copied levels: {{actual}}× (limit entry ≠ plan close ref.) · target {{target}}×',
   'plan.rrPillFlat': 'RR at displayed levels: {{actual}}×',
+  'plan.rrObjectiveShort': 'Target',
+  'plan.rrEffectiveShort': 'Live',
+  'plan.rrDecAria': 'Decrease TP multiplier by 1',
+  'plan.rrIncAria': 'Increase TP multiplier by 1',
+  'plan.slMultLabel': 'SL multiplier',
+  'plan.slMultTitle':
+    'Scales the displayed entry → model stop distance (swing / ATR). 1.00× = computed stop. TP1 follows the TP multiplier above.',
+  'plan.slMultAria': 'Integer multiplier on model stop distance (between {{min}} and {{max}})',
+  'plan.slMultDecAria': 'Decrease SL multiplier by 1',
+  'plan.slMultIncAria': 'Increase SL multiplier by 1',
+  'plan.slPillTitle': 'Risk vs model stop: {{actual}}× (target {{target}}×)',
 
   'plan.copyAll': 'Copy all',
   'plan.copiedToast': 'Copied',
 
   'plan.biasMarketAria': 'Market bias {{pair}}',
   'plan.biasSr': 'Bias · {{pair}}',
-  'plan.trendReadoutEyebrow': 'Multi-timeframe read',
+  'plan.trendReadoutEyebrow': 'MTF confluence',
+  'plan.actionBriefEyebrow': 'Summary',
+  'plan.mtfDetailsToggle': 'Details: entry quality, levels, orders',
+  'plan.mtfEssentialsEyebrow': 'Execution TF',
+  'plan.mtfRsiLabel': 'RSI {{n}}',
+  'plan.rsiHeatOverbought': 'Overbought',
+  'plan.rsiHeatOversold': 'Oversold',
+  'plan.rsiHeatNeutral': 'RSI neutral',
+  'plan.mtfBiasLong': 'Bullish bias',
+  'plan.mtfBiasShort': 'Bearish bias',
+  'plan.mtfBiasClash': 'Mixed signals',
+  'plan.mtfBiasNeutral': 'No clear bias',
+  'plan.mtfLimitTrendTitle': 'LIMIT plan bias',
+  'plan.mtfLimitLong': 'LONG',
+  'plan.mtfLimitShort': 'SHORT',
 
+  'plan.longTermTitle': 'Pure long-term investing (monthly)',
+  'plan.longTermBuy': 'Buy band (monthly)',
+  'plan.longTermSell': 'Sell band (monthly)',
+  'plan.longTermLimitedHover': 'Short monthly history (under 20 months).',
+  'plan.longTermLimitedAria': 'Limited history mode',
+  'plan.longTermPerfLabel': 'Monthly structural readability (indicative)',
+  'plan.longTermPerfAria': 'Monthly LT composite score: {{score}} out of 100',
+  'plan.longTermLoading': 'Loading daily candles for monthly rollup…',
+  'plan.longTermUnavailable':
+    'No usable daily candles to build at least one month (empty HL feed or pair unavailable).',
+  'plan.longTermFeedError': 'Could not load candles (network or API error).',
   'plan.empty.candlesUnavailable': 'Candles unavailable',
   'plan.empty.loading': 'Loading candles…',
   'plan.empty.shortHistoryTitle': 'History too short',
   'plan.empty.historyShort':
-    'Only {{have}}/60 candles on {{interval}} (fixed Plan feed).',
+    'Only {{have}}/60 candles on {{interval}} (Plan feed).',
   'plan.empty.regimeUnavailable': 'Regime unavailable',
   'plan.empty.regimeUnavailableBody':
     'Regime indicators are not usable on this window (EMA/ATR at series end). Wait for load to finish or switch pair.',
@@ -252,7 +384,9 @@ const en: Record<keyof typeof fr, string> = {
   'bloc.pairDirection': '{{pair}} · {{dir}}',
   'bloc.lastPrice': 'Last price ({{interval}}): {{price}}',
   'bloc.planCloseRef': 'Plan ref. close: {{price}}',
-  'bloc.rrTp1': 'RR TP1 (~displayed entry): {{rr}}×',
+  'bloc.rrTp1': 'TP multiplier (~displayed entry): {{rr}}×',
+  'bloc.execBuy': 'Limit buy (TF): {{price}}$',
+  'bloc.execSell': 'Limit sell (TF): {{price}}$',
 
   'tips.eth': 'ETH / EVM',
   'tips.sol': 'Solana',

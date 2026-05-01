@@ -27,6 +27,11 @@ export default defineConfig(({ mode }) => ({
         changeOrigin: true,
         rewrite: () => '/info',
       },
+      '/alternative-me-fng': {
+        target: 'https://api.alternative.me',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/alternative-me-fng/, '/fng'),
+      },
     },
   },
 }))

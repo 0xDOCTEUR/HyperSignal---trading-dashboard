@@ -11,17 +11,35 @@ import {
 } from '../lib/strategies'
 import type { Locale } from '../i18n/locale'
 
-/** Pyramide confluence · ordre d’affichage [D] [4H] [1H] [15M]. */
-export const PLAN_COMPARE_TF: readonly HlInterval[] = ['1d', '4h', '1h', '15m']
+/** Pyramide confluence · ordre fetch [1W] … [1M] (large → fin). */
+export const PLAN_COMPARE_TF: readonly HlInterval[] = [
+  '1w',
+  '1d',
+  '4h',
+  '1h',
+  '15m',
+  '5m',
+  '1m',
+]
 
-/** Fenêtres bougies MTF (Plan + filtre opportunités). Anciennement ~2200/UT → latence API + parse inutiles. */
-const FETCH_BARS_15M = 760 /* ~7,9 j · couvre ret 7j (≈672×15m) + marge */
-const FETCH_BARS_1H = 240 /* ~10 j */
-const FETCH_BARS_4H = 140 /* ~23 j · régime ≥60 bougies */
-const FETCH_BARS_1D = 420
+/**
+ * Fenêtres bougies MTF preset `plan` — volontairement compactes pour réduire la latence au chargement.
+ * Régime / stratégies : ≥60 bougies ; ret 7j 15m peut rester « — » si l’historique est trop court.
+ */
+const FETCH_BARS_1M = 600 /* ~10 h ; régime ≥60 ~1 h */
+const FETCH_BARS_5M = 400 /* ~33 h ; regime ≥60 ~5 h */
+const FETCH_BARS_15M = 300 /* ~3 j ; ret 24h OK (~96 barres) */
+const FETCH_BARS_1H = 200 /* ~8 j ; ret 7j OK (168 barres) */
+const FETCH_BARS_4H = 100 /* ~17 j */
+const FETCH_BARS_1D = 120
+const FETCH_BARS_1W = 96 /* ~2 ans */
 
 function fetchBarsForInterval(interval: HlInterval): number {
   switch (interval) {
+    case '1m':
+      return FETCH_BARS_1M
+    case '5m':
+      return FETCH_BARS_5M
     case '15m':
       return FETCH_BARS_15M
     case '1h':
@@ -30,6 +48,8 @@ function fetchBarsForInterval(interval: HlInterval): number {
       return FETCH_BARS_4H
     case '1d':
       return FETCH_BARS_1D
+    case '1w':
+      return FETCH_BARS_1W
     default:
       return FETCH_BARS_1H
   }
@@ -40,6 +60,10 @@ export type PlanTfFetchPreset = 'plan' | 'scan'
 /** Fenêtres courtes pour le scan Opportunités (réponses `/info` plus légères ; régime ≥60 bougies conservé). */
 function fetchBarsForIntervalScan(interval: HlInterval): number {
   switch (interval) {
+    case '1m':
+      return 240
+    case '5m':
+      return 220
     case '15m':
       return 160
     case '1h':
@@ -48,6 +72,8 @@ function fetchBarsForIntervalScan(interval: HlInterval): number {
       return 96
     case '1d':
       return 90
+    case '1w':
+      return 52
     default:
       return 96
   }
@@ -221,7 +247,7 @@ function buildTfRow(
       ? evaluateStrategies(closes, highs, lows, regime)
       : null
 
-  const bestVote = ev ? ev.best ?? ev.bestDirectionalRaw : null
+  const bestVote = ev ? ev.best : null
   const confirmedStrong = ev?.best != null
 
   const r = rsi(closes, 14)
@@ -322,23 +348,7 @@ function emptyTfRow(interval: HlInterval, errorMsg?: string): PlanTfRow {
   }
 }
 
-/** Durées pyramidales — même logique que les pastilles du Plan (bestVote vs sens du trade). */
-export function countIntervalsAlignedWithTradeDirection(
-  rows: PlanTfRow[],
-  direction: 'long' | 'short'
-): number {
-  let n = 0
-  for (const iv of PLAN_COMPARE_TF) {
-    const r = rows.find((x) => x.interval === iv)
-    if (!r || r.error) continue
-    const bd = r.bestVote?.direction
-    if (bd === direction) n++
-  }
-  return n
-}
-
-/**
- * Charge jour / 4h / 1h / 15m pour une paire.
+/** Charge les horizons pyramidaux (1 semaine → 1 minute) pour une paire.
  * `preset: 'scan'` → moins de bougies (filtre Opportunités, priorité latence).
  */
 export async function fetchPlanTfRowsForCoin(

@@ -1,6 +1,6 @@
 import type { HlCandle } from './hyperliquid'
 import type { Locale } from '../i18n/locale'
-import type { HlInterval } from './interval'
+import { MTF_SYNTHESIS_TF_ORDER, type HlInterval } from './interval'
 import { detectRegime, evaluateStrategies } from './strategies'
 import type { Direction, StrategyId } from './strategies'
 import { ema, highest, lastNonNull, lowest, macd, rsi } from './indicators'
@@ -137,6 +137,13 @@ export interface ScanSignal {
   relativeVsBtc: RelativeVsBtc | null
   indicatorGauges: IndicatorGaugesPct | null
   scanTrend: ScanTrendSummary | null
+  /**
+   * Après passe tradabilité multi‑TF : UT recommandée pour cadencer l’exécution
+   * (synthèse MTF, pas l’UT du scan initial).
+   */
+  preferredTimeframe: HlInterval | null
+  /** Nombre d’horizons (synthèse 5m→weekly) alignés avec le sens du trade. */
+  mtfAlignedCount: number
 }
 
 function strategyDisplayName(locale: Locale, id: StrategyId): string {
@@ -169,22 +176,35 @@ function regimeDisplayForUi(locale: Locale, raw: string | null): string | null {
 /** Libellé d’intervalle pour l’UI (scan / plan). */
 export function formatScanIntervalLabel(locale: Locale, iv: HlInterval): string {
   if (locale === 'en') {
+    if (iv === '1m') return '1 minute'
+    if (iv === '5m') return '5 minutes'
     if (iv === '15m') return '15 minutes'
     if (iv === '1h') return '1 hour'
     if (iv === '4h') return '4 hours'
     if (iv === '1d') return 'daily'
+    if (iv === '1w') return 'weekly'
     return iv
   }
+  if (iv === '1m') return '1 minute'
+  if (iv === '5m') return '5 minutes'
   if (iv === '15m') return '15 minutes'
   if (iv === '1h') return '1 heure'
   if (iv === '4h') return '4 heures'
   if (iv === '1d') return 'journalier'
+  if (iv === '1w') return 'hebdomadaire'
   return iv
 }
 
 /** @deprecated Utiliser formatScanIntervalLabel avec locale explicite. */
 export function formatScanIntervalLabelFr(iv: HlInterval): string {
   return formatScanIntervalLabel('fr', iv)
+}
+
+/** Libellé compact pour la colonne UT (synthèse multi‑TF). */
+export function formatScanUtColumn(locale: Locale, iv: HlInterval): string {
+  if (iv === '1d') return locale === 'en' ? 'Daily' : '1j'
+  if (iv === '1w') return locale === 'en' ? 'Weekly' : '1s'
+  return iv
 }
 
 /**
@@ -236,23 +256,22 @@ export function scanSetupBiasAlignmentRank(s: ScanSignal): number {
 
 /**
  * Score de conviction 0–100 : agrège confluence indicateurs, force du biais agrégé,
- * accord marché/setup, confirmation stratégie, pondération du vote et perf. vs BTC.
+ * accord marché/setup, confirmation stratégie et pondération du vote.
  * Indicateur qualitatif, pas une probabilité statistique que le trade « réussisse ».
  */
 export function tradeConvictionScore(s: ScanSignal): number {
   const strength = s.scanTrend?.strength ?? 1
   const align = scanSetupBiasAlignmentRank(s)
   const w = Math.min(1, Math.max(0, s.weighted))
+  const mtf = s.mtfAlignedCount ?? 0
 
   let score =
     s.confluencePct * 0.26 +
     strength * 10 +
     (align === 2 ? 20 : align === 1 ? 9 : 0) +
     (s.confirmed ? 11 : 0) +
-    w * 12
-
-  if (s.relativeVsBtc === 'outperform') score += 3
-  else if (s.relativeVsBtc === 'underperform') score -= 3
+    w * 12 +
+    mtf * 2.2
 
   if (align === 0) score *= 0.74
 
@@ -265,7 +284,7 @@ function formatIndicatorMarks(checks: IndicatorChecks): string {
 }
 
 /**
- * Infobulle tableau Opportunités : sens aligné sur la ligne, indicateurs succincts, score expliqué (≠ probabilité).
+ * Infobulle tableau Opportunités : sens, indicateurs, explication du score.
  */
 export function formatOpportunityRowTooltip(
   s: ScanSignal,
@@ -282,30 +301,26 @@ export function formatOpportunityRowTooltip(
       ? `Indicators (${dirWord}): ${formatIndicatorMarks(s.checks)} → ${s.validatedCount}/4`
       : `Indicateurs (${dirWord}) : ${formatIndicatorMarks(s.checks)} → ${s.validatedCount}/4`
   const score = tradeConvictionScore(s)
+  const mtfN = s.mtfAlignedCount ?? 0
+  const mtfMax = MTF_SYNTHESIS_TF_ORDER.length
   const scoreExplain =
     locale === 'en'
-      ? `Score ${score}/100: blends ~${Math.round(s.confluencePct)}% checks, trend strength, strategy/market alignment, weighted vote and light vs BTC.`
-      : `Score ${score}/100 : combine ~${Math.round(s.confluencePct)} % critères, intensité tendance, accord stratégie/marché, vote pondéré et léger vs BTC.`
-  const disclaimer =
-    locale === 'en'
-      ? `Qualitative only — not a probability of hitting TP or avoiding SL.`
-      : `Qualitatif uniquement — pas une probabilité de TP ni contre le SL.`
-  const strat = strategyDisplayName(locale, s.strategyId)
-  const setup =
-    locale === 'en'
-      ? s.confirmed
-        ? `Setup: ${strat}`
-        : `Setup: ${strat} (directional, strategy threshold not cleared)`
-      : s.confirmed
-        ? `Setup : ${strat}`
-        : `Setup : ${strat} (directionnel, seuil stratégie non franchi)`
-  return [head, indicators, scoreExplain, disclaimer, setup].join('\n')
+      ? `Score ${score}/100: blends ~${Math.round(s.confluencePct)}% checks, MTF alignment (${mtfN}/${mtfMax}, 5m–weekly), trend strength, strategy/market alignment and weighted vote.`
+      : `Score ${score}/100 : combine ~${Math.round(s.confluencePct)} % critères, alignement multi‑UT (${mtfN}/${mtfMax}, 5m à weekly), intensité tendance, accord stratégie/marché et vote pondéré.`
+  return [head, indicators, scoreExplain].join('\n')
 }
 
 /**
- * Tri liste Opportunités : force du biais agrégé, accord marché/setup, puis qualité scanner.
+ * Tri liste Opportunités : score de conviction d’abord (meilleure « qualité » en tête), puis départages.
  */
 export function compareScanOpportunities(a: ScanSignal, b: ScanSignal): number {
+  const ca = tradeConvictionScore(a)
+  const cb = tradeConvictionScore(b)
+  if (cb !== ca) return cb - ca
+  const ma = a.mtfAlignedCount ?? 0
+  const mb = b.mtfAlignedCount ?? 0
+  if (mb !== ma) return mb - ma
+  if (b.confluencePct !== a.confluencePct) return b.confluencePct - a.confluencePct
   const sta = a.scanTrend?.strength ?? 1
   const stb = b.scanTrend?.strength ?? 1
   if (stb !== sta) return stb - sta
@@ -314,11 +329,7 @@ export function compareScanOpportunities(a: ScanSignal, b: ScanSignal): number {
   if (ab !== aa) return ab - aa
   if (Number(b.confirmed) !== Number(a.confirmed)) return Number(b.confirmed) - Number(a.confirmed)
   if (b.validatedCount !== a.validatedCount) return b.validatedCount - a.validatedCount
-  if (b.weighted !== a.weighted) return b.weighted - a.weighted
-  const ca = tradeConvictionScore(a)
-  const cb = tradeConvictionScore(b)
-  if (cb !== ca) return cb - ca
-  return b.confluencePct - a.confluencePct
+  return b.weighted - a.weighted
 }
 
 export function candlesToOHLC(candles: HlCandle[]): {
@@ -480,5 +491,7 @@ export function analyzeCoinSnapshot(
     relativeVsBtc,
     indicatorGauges,
     scanTrend,
+    preferredTimeframe: null,
+    mtfAlignedCount: 0,
   }
 }

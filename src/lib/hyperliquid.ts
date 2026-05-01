@@ -42,8 +42,8 @@ export function normalizeWsCandle(raw: Record<string, unknown>): HlCandle {
 const HL_INFO_URL =
   import.meta.env.DEV ? '/hyperliquid-info' : 'https://api.hyperliquid.xyz/info'
 
-/** Évite les rafales vers `/info` (429 Too Many Requests). */
-const HL_INFO_MAX_PARALLEL = 3
+/** Évite les rafales vers `/info` (429 Too Many Requests). Plan MTF = jusqu’à 7 candleSnapshot en parallèle. */
+const HL_INFO_MAX_PARALLEL = 8
 const HL_INFO_MAX_RETRIES = 8
 const HL_INFO_RETRY_BASE_MS = 550
 const HL_INFO_RETRY_CAP_MS = 28_000
@@ -247,9 +247,15 @@ export async function fetchCandleSnapshot(params: {
       endTime: params.endTime,
     },
   })
-  const data = (await res.json()) as Record<string, unknown>[]
-  if (!Array.isArray(data)) return []
-  return data.map((row) => normalizeRestCandle(row))
+  const raw = await res.json() as unknown
+  if (raw == null) return []
+  if (Array.isArray(raw)) {
+    return raw.map((row) => normalizeRestCandle(row as Record<string, unknown>))
+  }
+  if (typeof raw === 'object' && raw !== null && 'error' in raw) {
+    throw new Error(String((raw as { error?: unknown }).error ?? 'candleSnapshot error'))
+  }
+  return []
 }
 
 function hlParseUsd(v: unknown): number | null {
